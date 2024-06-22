@@ -1,0 +1,38 @@
+# これはActionsを始めるための基本的なワークフローです。
+name: tutorial_CI
+
+# ワークフローがいつ実行されるかを制御する
+on:
+  # "main" ブランチへの push イベントでワークフローをトリガーする
+  push:
+    branches:
+      - main
+  # "main" ブランチへの pull request イベントでワークフローをトリガーする
+  pull_request:
+    branches:
+      - main
+  # Actions タブからこのワークフローを手動で実行できるようにする
+  workflow_dispatch:
+
+# ワークフローの実行は、順次または並行して実行できる1つ以上のジョブで構成される
+jobs:
+  # このワークフローには "build" という名前の単一のジョブが含まれている
+  build:
+    # ジョブが実行されるランナーのタイプ
+    runs-on: ubuntu-latest
+
+    # ステップは、ジョブの一部として実行される一連のタスクを表す
+    steps:
+      # リポジトリを $GITHUB_WORKSPACE にチェックアウトし、ジョブがアクセスできるようにする
+      - name: ジョブがリポジトリにアクセス可能にする
+        uses: actions/checkout@v4
+
+      # ランナーのシェルを使用して単一のコマンドを実行する
+      - name: 1行のコマンドを実行する
+        run: echo "Hello, world !"
+
+      # ランナーのシェルを使用して一連のコマンドを実行する
+      - name: 複数行のコマンドを実行する
+        run: |
+          echo "Add other actions to build,"
+          echo "test, and deploy your project."
