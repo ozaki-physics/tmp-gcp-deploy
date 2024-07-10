@@ -73,7 +73,7 @@ jobs:
     steps:
       - name: コードの Checkout
         id: checkout
-        uses: actions/checkout@4
+        uses: actions/checkout@v4
 
       - name: Google Auth を行う
         id: auth
