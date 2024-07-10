@@ -1,0 +1,126 @@
+# このワークフローは、コミットが "main" ブランチにプッシュされたときに、
+# DockerコンテナをビルドしてGoogle Artifact Registryにプッシュし、Cloud Runにデプロイします。
+#
+# 概要:
+#
+# 1. Google Cloudに認証する
+# 2. DockerをArtifact Registryに認証する
+# 3. Dockerコンテナをビルドする
+# 4. Google Artifact Registryに公開する
+# 5. Cloud Runにデプロイする
+#
+# このワークフローを設定するには:
+#
+# 1. 必要なGoogle Cloud APIが有効になっていることを確認する:
+#
+#    Cloud Run            run.googleapis.com
+#    Artifact Registry    artifactregistry.googleapis.com
+#
+# 2. GitHubのためのWorkload Identity Federationを作成し設定する
+# (https://github.com/google-github-actions/auth#setting-up-workload-identity-federation)
+#
+# 3. 必要なIAM権限が付与されていることを確認する
+#
+#    Cloud Run
+#      roles/run.admin
+#      roles/iam.serviceAccountUser     (Cloud Runのランタイムサービスアカウントとして動作するため)
+#
+#    Artifact Registry
+#      roles/artifactregistry.admin     (プロジェクトまたはリポジトリレベル)
+#
+#    注意: IAMロールを割り当てる際は、常に最小権限の原則に従うべきです
+#
+# 4. WIF_PROVIDER と WIF_SERVICE_ACCOUNT のGitHubシークレットを作成する
+#
+# 5. GAR_LOCATION、SERVICE、およびREGION環境変数の値を変更する（以下を参照）。
+#
+# 注意: Google Container Registryを使用する場合は、${{ env.GAR_LOCATION }}-docker.pkg.devをgcr.ioに置き換えてください
+#
+# このワークフローの実行方法についての詳細なサポートは、https://github.com/marketplace/actions/deploy-to-cloud-run をご覧ください
+#
+# 詳細な読み物:
+#   Cloud Run IAM権限                           - https://cloud.google.com/run/docs/deploying
+#   Artifact Registry IAM権限                   - https://cloud.google.com/artifact-registry/docs/access-control#roles
+#   Container RegistryとArtifact Registryの違い - https://cloud.google.com/blog/products/application-development/understanding-artifact-registry-vs-container-registry
+#   最小権限の原則                               - https://cloud.google.com/blog/products/identity-security/dont-get-pwned-practicing-the-principle-of-least-privilege
+
+name: Build and Deploy to Cloud Run
+
+on:
+  # push:
+  #   branches: 
+  #     - "main"
+  workflow_dispatch:
+
+# Repository secrets　に保存 (Environment secrets じゃない)
+# TODO: WIF_PROVIDER を GitHub シークレットに登録
+# TODO: WIF_SERVICE_ACCOUNT を GitHub シークレットに登録
+
+# Repository variables に保存 (Environment variables じゃない) 構成変数?
+# TODO: GCP_PROJECT_ID : Google Cloud プロジェクトIDを更新
+# TODO: GAR_LOCATION: Artifact Registry の場所を更新
+# TODO: GCR_SERVICE_NAME: Cloud Run サービス名を更新(リポジトリ名としても使う)
+# TODO: GCR_REGION: Cloud Run サービスのリージョンを更新
+
+env:
+
+jobs:
+  deploy:
+    name: デプロイの job
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: コードの Checkout
+        id: checkout
+        uses: actions/checkout@4
+
+      - name: Google Auth を行う
+        id: auth
+        uses: 'google-github-actions/auth@v2'
+        with:
+          token_format: 'access_token'
+          workload_identity_provider: '${{ secrets.WIF_PROVIDER }}'
+          # 例: projects/123456789/locations/global/workloadIdentityPools/my-pool/providers/my-provider
+          service_account: '${{ secrets.WIF_SERVICE_ACCOUNT }}'
+          # 例: my-service-account@my-project.iam.gserviceaccount.com
+
+      # 開始 - Docker 認証とビルド
+      # (注: すでにコンテナイメージがある場合、これらのDockerステップは省略可能)
+
+      # Google Cloud Artifact Registry に Docker を認証
+      - name: GAR へ Login を行う
+        id: docker-auth-to-gar
+        uses: 'docker/login-action@v3'
+        with:
+          registry: '${{ vars.GAR_LOCATION }}-docker.pkg.dev'
+          username: 'oauth2accesstoken'
+          password: '${{ steps.auth.outputs.access_token }}'
+
+      - name: image を Build する
+        id: image-build
+        run: |-
+          docker build -t "${{ vars.GAR_LOCATION }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/${{ vars.GCR_SERVICE_NAME }}:${{ github.sha }}" ./frontend
+
+      - name: image を Push する
+        id: image-push
+        run: |-
+          docker push "${{ vars.GAR_LOCATION }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/${{ vars.GCR_SERVICE_NAME }}:${{ github.sha }}"
+
+      # 終了 - Docker 認証とビルド
+
+      - name: Cloud Run に Deploy する
+        id: deploy-to-cloud-run
+        uses: google-github-actions/deploy-cloudrun@v2
+        with:
+          service: ${{ vars.GCR_SERVICE_NAME }}
+          region: ${{ vars.GCR_REGION }}
+          # 注: 事前にビルドされたイメージを使用する場合、ここでイメージ名を更新
+          image: ${{ vars.GAR_LOCATION }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/${{ vars.GCR_SERVICE_NAME }}:${{ github.sha }}
+
+      # 必要に応じて、後続のステップで Cloud Run の URL 出力を使用
+      - name: Cloud Run の URL 出力
+        id: show-output
+        run: echo ${{ steps.deploy-to-cloud-run.outputs.url }}
