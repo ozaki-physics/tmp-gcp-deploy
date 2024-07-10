@@ -62,8 +62,6 @@ on:
 # TODO: GCR_SERVICE_NAME: Cloud Run サービス名を更新(リポジトリ名としても使う)
 # TODO: GCR_REGION: Cloud Run サービスのリージョンを更新
 
-env:
-
 jobs:
   deploy:
     name: デプロイの job
