@@ -24,7 +24,7 @@ COPY ./local_test_svelte/package*.json ./
 RUN npm install --production
 
 # Copy the built project files from the builder stage
-COPY --from=builder /app/build /app/build
+COPY --from=builder /test/frontend/local_test_svelte /app/build
 
 # Set environment variable to indicate the production environment
 ENV NODE_ENV=production
