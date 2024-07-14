@@ -1,0 +1,17 @@
+# まずは go.mod とか Svelte をインストールするための初期を作る
+services:
+  local_test:
+    build:
+      # この ファイルからの相対パスで書かないといけない
+      # context: .devcontainer
+      context: .
+      dockerfile: Dockerfile
+    image: local:test
+    container_name: local_test
+    tty: true
+    command: bash
+    volumes:
+      - ../:/test:rw
+    ports:
+      - "127.0.0.1:5001:8081"
+      - "127.0.0.1:5002:8080"
