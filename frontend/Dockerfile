@@ -21,10 +21,10 @@ WORKDIR /app
 
 # パッケージをコピーしてインストール
 COPY ./local_test_svelte/package*.json ./
-RUN npm install --production
+RUN npm ci --omit dev
 
 # Copy the built project files from the builder stage
-COPY --from=builder /test/frontend/local_test_svelte /app/build
+COPY --from=builder /test/frontend/local_test_svelte/build /app/build
 
 # Set environment variable to indicate the production environment
 ENV NODE_ENV=production
