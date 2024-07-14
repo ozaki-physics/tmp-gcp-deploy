@@ -52,15 +52,17 @@ on:
   #     - "main"
   workflow_dispatch:
 
-# Repository secrets　に保存 (Environment secrets じゃない)
-# TODO: WIF_PROVIDER を GitHub シークレットに登録
-# TODO: WIF_SERVICE_ACCOUNT を GitHub シークレットに登録
-
 # Repository variables に保存 (Environment variables じゃない) 構成変数?
-# TODO: GCP_PROJECT_ID : Google Cloud プロジェクトIDを更新
-# TODO: GAR_LOCATION: Artifact Registry の場所を更新
-# TODO: GCR_SERVICE_NAME: Cloud Run サービス名を更新(リポジトリ名としても使う)
-# TODO: GCR_REGION: Cloud Run サービスのリージョンを更新
+# なし
+
+# Repository secrets　に保存 (Environment secrets じゃない)
+# GCP_PROJECT_ID: Google Cloud プロジェクト ID
+# WIF_PROVIDER: Workload Identity 連携 のプロバイダ
+# WIF_SERVICE_ACCOUNT: Workload Identity 連携 の サービスアカウント
+# ARTIFACT_REPO_NAME: Artifact Registry のリポジトリ名
+# GAR_LOCATION: Artifact Registry の ロケーション
+# GCR_SERVICE_NAME: Cloud Run サービス名
+# GCR_REGION: Cloud Run サービスのリージョン
 
 jobs:
   deploy:
@@ -93,19 +95,19 @@ jobs:
         id: docker-auth-to-gar
         uses: 'docker/login-action@v3'
         with:
-          registry: '${{ vars.GAR_LOCATION }}-docker.pkg.dev'
+          registry: '${{ secrets.GAR_LOCATION }}-docker.pkg.dev'
           username: 'oauth2accesstoken'
           password: '${{ steps.auth.outputs.access_token }}'
 
       - name: image を Build する
         id: image-build
         run: |-
-          docker build -t "${{ vars.GAR_LOCATION }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/${{ vars.GCR_SERVICE_NAME }}:${{ github.sha }}" ./frontend
+          docker build -t "${{ secrets.GAR_LOCATION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secret.ARTIFACT_REPO }}/${{ secrets.GCR_SERVICE_NAME }}:${{ github.sha }}" ./frontend
 
       - name: image を Push する
         id: image-push
         run: |-
-          docker push "${{ vars.GAR_LOCATION }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/${{ vars.GCR_SERVICE_NAME }}:${{ github.sha }}"
+          docker push "${{ secrets.GAR_LOCATION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secret.ARTIFACT_REPO }}/${{ secrets.GCR_SERVICE_NAME }}:${{ github.sha }}"
 
       # 終了 - Docker 認証とビルド
 
@@ -113,10 +115,10 @@ jobs:
         id: deploy-to-cloud-run
         uses: google-github-actions/deploy-cloudrun@v2
         with:
-          service: ${{ vars.GCR_SERVICE_NAME }}
-          region: ${{ vars.GCR_REGION }}
+          service: ${{ secrets.GCR_SERVICE_NAME }}
+          region: ${{ secrets.GCR_REGION }}
           # 注: 事前にビルドされたイメージを使用する場合、ここでイメージ名を更新
-          image: ${{ vars.GAR_LOCATION }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/${{ vars.GCR_SERVICE_NAME }}:${{ github.sha }}
+          image: ${{ secrets.GAR_LOCATION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secret.ARTIFACT_REPO }}/${{ secrets.GCR_SERVICE_NAME }}:${{ github.sha }}
 
       # 必要に応じて、後続のステップで Cloud Run の URL 出力を使用
       - name: Cloud Run の URL 出力
