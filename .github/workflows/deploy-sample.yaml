@@ -102,12 +102,12 @@ jobs:
       - name: image を Build する
         id: image-build
         run: |-
-          docker build -t "${{ secrets.GAR_LOCATION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secret.ARTIFACT_REPO }}/${{ secrets.GCR_SERVICE_NAME }}:${{ github.sha }}" ./frontend
+          docker build -t "${{ secrets.GAR_LOCATION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secret.ARTIFACT_REPO_NAME }}/${{ secrets.GCR_SERVICE_NAME }}:${{ github.sha }}" ./frontend
 
       - name: image を Push する
         id: image-push
         run: |-
-          docker push "${{ secrets.GAR_LOCATION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secret.ARTIFACT_REPO }}/${{ secrets.GCR_SERVICE_NAME }}:${{ github.sha }}"
+          docker push "${{ secrets.GAR_LOCATION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secret.ARTIFACT_REPO_NAME }}/${{ secrets.GCR_SERVICE_NAME }}:${{ github.sha }}"
 
       # 終了 - Docker 認証とビルド
 
@@ -118,7 +118,7 @@ jobs:
           service: ${{ secrets.GCR_SERVICE_NAME }}
           region: ${{ secrets.GCR_REGION }}
           # 注: 事前にビルドされたイメージを使用する場合、ここでイメージ名を更新
-          image: ${{ secrets.GAR_LOCATION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secret.ARTIFACT_REPO }}/${{ secrets.GCR_SERVICE_NAME }}:${{ github.sha }}
+          image: ${{ secrets.GAR_LOCATION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secret.ARTIFACT_REPO_NAME }}/${{ secrets.GCR_SERVICE_NAME }}:${{ github.sha }}
 
       # 必要に応じて、後続のステップで Cloud Run の URL 出力を使用
       - name: Cloud Run の URL 出力
