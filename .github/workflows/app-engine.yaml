@@ -30,28 +30,19 @@ jobs:
           workload_identity_provider: '${{ secrets.WIF_PROVIDER }}'
           service_account: '${{ secrets.WIF_SERVICE_ACCOUNT }}'
 
-      - name: Set up Cloud SDK
+      - name: Cloud SDK をセットアップ
+        id: setup-gcloud
         uses: 'google-github-actions/setup-gcloud@v2'
 
       - name: gcloud の確認
         id: gcloud-check
         run: |-
           gcloud version
-          gcloud components list
       
       - name: gcloud で app-engine-go をインストール
         id: install-components
         run: |-
-          gcloud components update
-          gcloud components list
           gcloud components install app-engine-go
-          gcloud components list
-      
-      - name: apt-get で google-cloud-cli-app-engine-go をインストール
-        run: |-
-          sudo apt-get update
-          sudo apt-get install google-cloud-cli-app-engine-go
-          gcloud components list
 
       - name: App Engine に Deploy する
         id: deploy-to-app-engine
