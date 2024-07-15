@@ -37,7 +37,10 @@ jobs:
           gcloud components list
       
       - name: gcloud で app-engine-go をインストール
-        run: gcloud components install app-engine-go
+        id: install-components
+        run: |-
+          sudo apt-get install google-cloud-cli-app-engine-go
+          gcloud components list
 
       - name: App Engine に Deploy する
         id: deploy-to-app-engine
