@@ -36,7 +36,7 @@ jobs:
         with:
           project_id: ${{ secrets.GCP_PROJECT_ID }}
           working_directory: ./backend
-          deliverables: ./backend/app.yaml
+          deliverables: ./app.yaml
 
       # 必要に応じて、後続のステップで Cloud Run の URL 出力を使用
       - name: App Engine の URL 出力
