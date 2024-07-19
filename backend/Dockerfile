@@ -17,6 +17,7 @@ RUN go build -o main main.go
 
 # アプリケーションを実行
 # CMD ["./main"]
+RUN ls -al
 
 
 # 実行ステージ
@@ -24,5 +25,6 @@ FROM alpine:3
 
 # ビルド済みのバイナリをコピー
 COPY --from=builder /test/backend/main main
+RUN ls -al
 
 CMD ["./main"]
