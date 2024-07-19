@@ -16,7 +16,7 @@ COPY . .
 RUN go build -o main main.go
 
 # アプリケーションを実行
-CMD ["./main"]
+# CMD ["./main"]
 
 
 # 実行ステージ
