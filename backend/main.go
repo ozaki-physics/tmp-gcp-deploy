@@ -20,7 +20,7 @@ func main() {
 		port = "8081"
 	}
 
-	if err := http.ListenAndServe(":" + port, nil); err != nil {
+	if err := http.ListenAndServe(":"+port, nil); err != nil {
 		log.Fatalf("Could not start server: %s\n", err)
 	}
 }

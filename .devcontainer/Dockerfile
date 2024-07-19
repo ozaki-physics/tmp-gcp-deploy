@@ -1,8 +1,8 @@
 # Use an official Go runtime as a parent image
-FROM golang:1.22 as golang
+FROM golang:1.22 AS golang
 
 # Use an official Node.js runtime as a parent image
-FROM node:20 as nodejs
+FROM node:20 AS nodejs
 
 # Create a new image from the above images
 FROM ubuntu:22.04

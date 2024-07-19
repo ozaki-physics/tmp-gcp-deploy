@@ -9,12 +9,16 @@ RUN npm install
 
 # アプリケーションのソースをコピー
 COPY ./local_test_svelte .
+# COPY ./local_test_svelte/src ./src
+# COPY ./local_test_svelte/static ./static
+# COPY ./local_test_svelte/svelte.config.js ./svelte.config.js
+# COPY ./local_test_svelte/vite.config.ts ./vite.config.ts
 
 # ビルドする
 RUN npm run build
 
 # 2. 実行環境
-FROM node:20 AS stage-build
+FROM node:20-slim AS stage-build
 
 WORKDIR /app
 
