@@ -5,7 +5,6 @@ metadata:
 spec:
   template:
     metadata:
-      name: ${CR_REGION}
       annotations:
         autoscaling.knative.dev/minScale: '0'
         autoscaling.knative.dev/maxScale: '3'
