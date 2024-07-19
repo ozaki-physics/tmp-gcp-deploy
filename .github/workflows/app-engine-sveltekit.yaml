@@ -1,0 +1,55 @@
+name: SvelteKit を Build して App Engine に Deploy する
+
+on:
+  # push:
+  #   branches: 
+  #     - "main"
+  workflow_dispatch:
+
+# GCP_PROJECT_ID: Google Cloud プロジェクト ID
+
+
+jobs:
+  deploy:
+    name: デプロイの job
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: コードの Checkout
+        id: checkout
+        uses: actions/checkout@v4
+
+      - name: Google Auth を行う
+        id: auth
+        uses: 'google-github-actions/auth@v2'
+        with:
+          token_format: 'access_token'
+          workload_identity_provider: '${{ secrets.WIF_PROVIDER }}'
+          service_account: '${{ secrets.WIF_SERVICE_ACCOUNT }}'
+
+      - name: Cloud SDK をセットアップ
+        id: setup-gcloud
+        uses: 'google-github-actions/setup-gcloud@v2'
+
+      - name: gcloud の確認
+        id: gcloud-check
+        run: |-
+          gcloud version
+
+      # - name: gcloud で app-engine-go をインストール
+      #   id: install-components
+      #   run: |-
+      #     gcloud components install app-engine-go
+
+      - name: App Engine に Deploy する
+        id: deploy-to-app-engine
+        run: |-
+          gcloud app deploy ./frontend/local_test_svelte/app.yaml --format json --project ${{ secrets.GCP_PROJECT_ID }} --promote --quiet
+
+      # 必要に応じて、後続のステップで Cloud Run の URL 出力を使用
+      - name: App Engine の URL 出力
+        id: show-output
+        run: echo ${{ steps.deploy-to-app-engine.outputs.version_url }}
