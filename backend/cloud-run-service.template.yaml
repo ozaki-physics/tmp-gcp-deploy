@@ -12,22 +12,10 @@ spec:
       containerConcurrency: 10
       containers:
       - image: ${DOCKER_IMAGE}
-        env:
-          - name: PORT
-            value: "${CR_PORT}"
-        ports:
-        - name: http1
-          containerPort: ${CR_PORT}
         resources:
           limits:
             cpu: 1000m
             memory: 128Mi
-        startupProbe:
-          timeoutSeconds: 240
-          periodSeconds: 240
-          failureThreshold: 1
-          tcpSocket:
-            port: ${CR_PORT}
   traffic:
   - percent: 100
     latestRevision: true
