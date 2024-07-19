@@ -14,7 +14,7 @@ spec:
       - image: ${DOCKER_IMAGE}
         env:
           - name: PORT
-            value: ${CR_PORT}
+            value: "${CR_PORT}"
         ports:
         - name: http1
           containerPort: ${CR_PORT}
