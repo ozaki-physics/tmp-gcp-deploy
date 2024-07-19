@@ -12,7 +12,20 @@ func greet(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Hello World! %s", time.Now())
 }
 
+func favicon(w http.ResponseWriter, r *http.Request) {
+	http.ServeFile(w, r, "./web/favicon.ico")
+}
+func humansTxt(w http.ResponseWriter, r *http.Request) {
+	http.ServeFile(w, r, "./web/humans.txt")
+}
+func robotsTxt(w http.ResponseWriter, r *http.Request) {
+	http.ServeFile(w, r, "./web/robots.txt")
+}
+
 func main() {
+	http.HandleFunc("/favicon.ico", favicon)
+	http.HandleFunc("/humans.txt", humansTxt)
+	http.HandleFunc("/robots.txt", robotsTxt)
 	http.HandleFunc("/", greet)
 
 	port := os.Getenv("PORT")

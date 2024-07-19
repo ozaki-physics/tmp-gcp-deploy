@@ -65,14 +65,24 @@ jobs:
 
       # 終了 - Docker 認証とビルド
 
+      - name: Cloud Run の metadata を作る
+        id: make-cloud-run-metadata
+        run: |-
+          export DOCKER_IMAGE="${{ secrets.GAR_LOCATION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.ARTIFACT_REPO_NAME }}/${{ secrets.GCR_SERVICE_NAME }}:${{ github.sha }}"
+          export CR_SERVICE="${{ secrets.GCR_SERVICE_NAME }}"
+          export CR_REGION="${{ secrets.GCR_REGION }}"
+          export CR_PORT="${{ secrets.GCR_PORT }}"
+          envsubst < ./backend/cloud-run-service.template.yaml > cloud-run-service.yaml
+
       - name: Cloud Run に Deploy する
         id: deploy-to-cloud-run
         uses: google-github-actions/deploy-cloudrun@v2
         with:
           service: ${{ secrets.GCR_SERVICE_NAME }}
           region: ${{ secrets.GCR_REGION }}
+          metadata: cloud-run-service.yaml
           # 注: 事前にビルドされたイメージを使用する場合、ここでイメージ名を更新
-          image: ${{ secrets.GAR_LOCATION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.ARTIFACT_REPO_NAME }}/${{ secrets.GCR_SERVICE_NAME }}:${{ github.sha }}
+          # image: ${{ secrets.GAR_LOCATION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.ARTIFACT_REPO_NAME }}/${{ secrets.GCR_SERVICE_NAME }}:${{ github.sha }}
 
       # 必要に応じて、後続のステップで Cloud Run の URL 出力を使用
       - name: Cloud Run の URL 出力
