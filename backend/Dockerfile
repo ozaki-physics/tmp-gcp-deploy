@@ -15,16 +15,15 @@ COPY . .
 # アプリケーションをビルド
 RUN go build -o main main.go
 
-# アプリケーションを実行
-# CMD ["./main"]
-RUN ls -al
-
-
 # 実行ステージ
-FROM alpine:3
+FROM debian:stable-slim
+
+WORKDIR /app
+
+# なぜか path を通さないとエラーになった
+ENV PATH="/app:${PATH}"
 
 # ビルド済みのバイナリをコピー
-COPY --from=builder /test/backend/main main
-RUN ls -al
+COPY --from=builder /test/backend/main /app/main
 
 CMD ["./main"]
