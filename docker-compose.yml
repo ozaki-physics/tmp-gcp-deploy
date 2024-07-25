@@ -1,0 +1,34 @@
+# このファイルは 本番と似た環境: コンテナを2個動かして 本番と同じような状態にする
+# 本番環境に近づけるため マウントはしない
+# 開発環境は以下
+# docker-compose -f .devcontainer/docker-compose.yml up -d
+# でも実際は VSCode から .devcontainer/devcontainer.json を下に コンテナに接続して開発する
+
+services:
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    image: local_svelte:test
+    container_name: local_test_svelte
+    tty: true
+    ports:
+      - "127.0.0.1:5002:3000"
+    depends_on:
+      - backend
+    # volumes:
+      # - ./frontend:/test/frontend:rw
+    # command: npm run dev -- --host --port=8080
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    image: local_go:test
+    container_name: local_test_go
+    tty: true
+    ports:
+      - "127.0.0.1:5001:8081"
+    # volumes:
+      # - ./backend:/test/backend:rw
+    # command: ./main

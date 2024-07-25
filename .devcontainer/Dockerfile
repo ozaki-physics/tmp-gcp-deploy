@@ -1,13 +1,10 @@
-# Use an official Go runtime as a parent image
 FROM golang:1.22 AS golang
-
-# Use an official Node.js runtime as a parent image
 FROM node:20 AS nodejs
 
-# Create a new image from the above images
+# 新しいイメージの作成
 FROM ubuntu:22.04
 
-# Install dependencies and tools
+# 開発で使いそうなツールのインストール
 RUN apt-get update && \
     # なんか非推奨らしい?
     # apt-get upgrade -y && \
@@ -20,19 +17,18 @@ RUN apt-get update && \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy Go and Node.js from the respective images
+# Go と Node.js から 動かすために必要な要素を コピー
 COPY --from=golang /usr/local/go /usr/local/go
 COPY --from=nodejs /usr/local/bin/node /usr/local/bin/
 COPY --from=nodejs /usr/local/lib/node_modules /usr/local/lib/node_modules
-# COPY --from=nodejs /usr/local/bin/npm /usr/local/bin/
-# COPY --from=nodejs /usr/local/bin/npx /usr/local/bin/
 
-# Set Go environment variables
+# Go と Node.js の パスを通す
 ENV PATH="/usr/local/go/bin:${PATH}"
-
-# Set Node.js environment variables
 ENV PATH="/usr/local/bin:${PATH}"
 
+# 生成させたら COPY だったが 動かなかったので コマンド本体 と bin 内のコマンド で エイリアス を作った
+# COPY --from=nodejs /usr/local/bin/npm /usr/local/bin/
+# COPY --from=nodejs /usr/local/bin/npx /usr/local/bin/
 RUN ln -s /usr/local/lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm
 RUN ln -s /usr/local/lib/node_modules/npm/bin/npx-cli.js /usr/local/bin/npx
 
@@ -44,21 +40,17 @@ RUN echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.
     apt-get update -y && \
     apt-get install google-cloud-sdk -y
 
-# # Create and set the working directory
-# WORKDIR /test_app
+# バックエンド の Go で 必要なライブラリをインストール
+WORKDIR /app/backend
+COPY ./backend/go.mod ./
+COPY ./backend/go.sum ./
+RUN go mod download
 
-# # Install Go and Node.js dependencies
-# COPY go.mod go.sum ./
-# RUN go mod download
+# フロントエンド の Node.js で 必要なライブラリをインストール
+WORKDIR /app/frontend/local_test_svelte/
+COPY ../frontend/local_test_svelte/package*.json ./
+RUN npm install
 
-# COPY package.json package-lock.json ./
-# RUN npm install
-
-# # Copy the project files
-# COPY . .
-
-# # Expose the application ports
-# EXPOSE 8080
-
-# # Start the application (update the command as needed for your application)
-# CMD ["go", "run", "main.go"]
+# 本当は ソースのコピーと実行コマンドを定義しないといけない
+# この image の使い方が docker compose からマウントして
+# bash で 動かす開発環境だから CMD も書かない
